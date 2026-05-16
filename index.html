@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth" style="scroll-padding-top: 64px;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gallerink | Link to the Art</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@100;300;400;500;700&display=swap');
+        
+        :root {
+            --brand-primary: #1C44FF;
+            --brand-light: #F0F4FF;
+            --apple-black: #1d1d1f;
+            --apple-gray: #f5f5f7;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: #ffffff; 
+            color: var(--apple-black);
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.015em;
+        }
+
+        /* Navigation Styles */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Mobile Menu Animation */
+        #mobile-menu {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+        }
+        #mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .hero-text { font-size: clamp(2.8rem, 8vw, 5rem); line-height: 1.05; font-weight: 700; }
+        
+        .btn-brand {
+            background-color: var(--brand-primary);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 980px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-brand:hover { 
+            opacity: 0.9; 
+            transform: scale(1.02); 
+            box-shadow: 0 10px 25px rgba(28, 68, 255, 0.25);
+        }
+
+        .card-split {
+            background: var(--apple-gray);
+            border-radius: 32px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 320px;
+            border: 1px solid transparent;
+        }
+        .card-split:hover { transform: translateY(-4px); border-color: var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.04); }
+
+        .filter-tag {
+            padding: 6px 18px;
+            border-radius: 980px;
+            font-size: 13px;
+            background: var(--apple-gray);
+            color: #86868b;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .filter-tag.active { background: var(--brand-primary); color: white; }
+
+        /* AI Scan Line */
+        .scan-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--brand-primary), transparent);
+            box-shadow: 0 0 10px var(--brand-primary);
+            animation: moveScan 4s ease-in-out infinite;
+            position: absolute;
+            width: 100%;
+            z-index: 10;
+        }
+        @keyframes moveScan {
+            0%, 100% { top: 0; opacity: 0; }
+            50% { top: 100%; opacity: 1; }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+        /* 미니 행정 카드 스타일 */
+        .mini-doc-card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mini-doc-card:hover {
+            border-color: var(--brand-primary);
+            background-color: var(--brand-light);
+            transform: translateY(-2px);
+        }
+
+        .stamp {
+            border: 2px solid var(--brand-primary);
+            color: var(--brand-primary);
+            font-weight: 800;
+            font-size: 0.75rem;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-15deg);
+            opacity: 0.6;
+        }
+
+        /* 렌탈 수량 인풋 스피너 숨기기 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Global Navigation -->
+    <nav class="glass-nav fixed top-0 left-0 w-full z-[100] h-14 flex items-center transition-all duration-300">
+        <div class="max-w-[1100px] mx-auto w-full px-6 flex justify-between items-center">
+            <a href="index.html" class="flex items-center">
+                <span class="font-bold text-2xl tracking-tighter text-[#1C44FF]">Gallerink</span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden lg:flex space-x-8 text-[13px] font-medium opacity-70">
+                <a href="space-explore.html" class="hover:text-[#1C44FF] transition">Explore</a>
+                <a href="rental-explore.html" class="hover:text-[#1C44FF] transition">Rental</a>
+                <a href="community-explore.html" class="hover:text-[#1C44FF] transition">Community</a>
+                <a href="ai-curation.html" class="hover:text-[#1C44FF] transition">AI Curation</a>
+                <a href="find-subsidy.html" class="hover:text-[#1C44FF] transition">Find Subsidy</a>
+                <a href="about-us.html" class="hover:text-[#1C44FF] transition">About Us</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="mypage.html" class="hidden md:block text-[12px] font-semibold text-[#1C44FF] bg-[#F0F4FF] px-4 py-1.5 rounded-full hover:bg-[#1C44FF] hover:text-white transition whitespace-nowrap">마이페이지</a>
+                <button type="button" id="menu-toggle" class="lg:hidden text-slate-800 text-xl focus:outline-none p-2">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Slide Menu -->
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/40 z-[140] hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="mobile-menu" class="fixed top-0 right-0 w-[280px] h-full bg-white z-[150] shadow-2xl flex flex-col p-8 lg:hidden">
+        <div class="flex justify-between items-center mb-12">
+            <span class="font-bold text-xl text-[#1C44FF]">Gallerink</span>
+            <button type="button" id="menu-close" class="text-slate-400 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="flex flex-col space-y-6 text-lg font-semibold text-slate-800">
+            <a href="space-explore.html">Explore</a>
+            <a href="rental-explore.html">Rental</a>
+            <a href="community-explore.html">Community</a>
+            <a href="ai-curation.html">AI Curation</a>
+            <a href="find-subsidy.html">Find Subsidy</a>
+            <a href="about-us.html">About Us</a>
+        </nav>
+        <div class="mt-auto pt-8 border-t border-slate-100 flex flex-col gap-4">
+            <a href="mypage.html" class="w-full py-3 bg-[#F0F4FF] text-[#1C44FF] rounded-xl font-bold text-center">마이페이지</a>
+            <button type="button" onclick="showToast('설정 페이지는 준비 중입니다.')" class="w-full py-3 border border-slate-200 text-slate-500 rounded-xl font-bold">설정</button>
+        </div>
+    </div>
+
+    <!-- 1. Hero Section -->
+    <header class="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1920&q=80" alt="Exhibition Space" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-white/85 backdrop-blur-[2px]"></div>
+        </div>
+
+        <div class="max-w-4xl animate-fade-in opacity-0 relative z-10">
+            <h1 class="hero-text mb-8 tracking-tight">
+                Link to the Art,<br>
+                <span class="text-slate-400">Link to the Space.</span>
+            </h1>
+            <p class="max-w-xl mx-auto text-lg md:text-xl font-medium text-slate-600 mb-12 leading-relaxed break-keep">
+                졸업 전시부터 첫 개인전까지.<br>
+                나에게 딱 맞춘 공간과 원스톱 전시 물류를 찾아보세요!
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#explore" class="btn-brand shadow-xl px-10 py-4 text-sm whitespace-nowrap">전시공간 탐색하기</a>
+                <button type="button" class="bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 transition px-10 py-4 rounded-full font-semibold text-sm flex items-center whitespace-nowrap shadow-sm" onclick="window.location.href='register.html'">
+                    전시공간 등록하기 <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. Explore: Gallery Selection -->
+    <section id="explore" class="py-24 bg-slate-50 border-y border-slate-100/50">
+        <div class="max-w-[1100px] mx-auto px-6">
+            <div class="mb-14 flex flex-col md:flex-row justify-between items-center md:items-end gap-6 text-center md:text-left">
+                <div>
+                    <!-- 소제목 추가 -->
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-[#1C44FF] mb-3 block">Space Explore</span>
+                    <h2 class="text-3xl md:text-4xl font-bold mb-6 tracking-tight">전시 공간 찾기</h2>
+                    <div class="flex flex-wrap gap-2 no-scrollbar overflow-x-auto pb-2 justify-center md:justify-start" id="filterContainer">
+                        <button class="filter-tag active" data-filter="all">전체</button>
+                        <button class="filter-tag" data-filter="seongsu">성수/건대</button>
+                        <button class="filter-tag" data-filter="insa">인사/삼청</button>
+                        <button class="filter-tag" data-filter="hongdae">홍대/연남</button>
+                        <button class="filter-tag" data-filter="itaewon">한남/이태원</button>
+                    </div>
+                </div>
+                <button type="button" class="text-sm font-semibold text-slate-600 bg-white border border-slate-200 px-5 py-2.5 rounded-full hover:bg-slate-100 transition whitespace-nowrap shadow-sm" onclick="window.location.href='space-explore.html'">더보기 <i class="fa-solid fa-chevron-right ml-1"></i></button>
+            </div>
+
+            <!-- 모바일 좌우 2열 그리드 적용 -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6" id="galleryGrid">
+                
+                <!-- Card 1 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="seongsu" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/i2FNLb7.jpeg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute top-2 left-2 md:top-3 md:left-3 bg-slate-900/80 backdrop-blur px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-white shadow-sm whitespace-nowrap"><i class="fa-solid fa-hammer text-[7px] mr-1 text-[#F0F4FF]"></i>못질가능</div>
+                        <div class="absolute top-2 right-2 md:top-3 md:right-3 bg-white/95 backdrop-blur px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-slate-800 uppercase whitespace-nowrap">P2P Space</div>
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">성수 브루잉 팝업홀</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 성동구 · 층고 3.5m</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-slate-800">₩150,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="insa" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/B3v8AQr.jpeg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute top-2 right-2 md:top-3 md:right-3 bg-[#1C44FF] px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-white uppercase shadow-md whitespace-nowrap">Premium</div>
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">인사동 아틀리에 01</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 종로구 · 화이트큐브</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-[#1C44FF]">₩320,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="hongdae" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/ArN1isy.jpeg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute top-2 left-2 md:top-3 md:left-3 bg-slate-900/80 backdrop-blur px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-white shadow-sm whitespace-nowrap"><i class="fa-solid fa-hammer text-[7px] mr-1 text-[#F0F4FF]"></i>못질가능</div>
+                        <div class="absolute top-2 right-2 md:top-3 md:right-3 bg-white/95 backdrop-blur px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-slate-800 uppercase whitespace-nowrap">Empty Shop</div>
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">연남 1층 복층 쇼룸</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 마포구 · 층고 4m</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-slate-800">₩120,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+                <!-- Card 4 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="itaewon" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/OaebeEF.jpeg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute top-2 right-2 md:top-3 md:right-3 bg-[#1C44FF] px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-white uppercase shadow-md whitespace-nowrap">Premium</div>
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">한남 갤러리 룸 B</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 용산구 · 대형 통창</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-[#1C44FF]">₩450,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+                <!-- Card 5 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="seongsu" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/i2FNLb7.jpeg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute top-2 right-2 md:top-3 md:right-3 bg-white/95 backdrop-blur px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-slate-800 uppercase whitespace-nowrap">P2P Space</div>
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">건대 창고형 스튜디오</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 광진구 · 인더스트리얼</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-slate-800">₩180,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+                <!-- Card 6 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="insa" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/B3v8AQr.jpeg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute top-2 left-2 md:top-3 md:left-3 bg-slate-900/80 backdrop-blur px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-white shadow-sm whitespace-nowrap"><i class="fa-solid fa-hammer text-[7px] mr-1 text-[#F0F4FF]"></i>못질가능</div>
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">삼청동 한옥 갤러리</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 종로구 · ₩25만/일</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-slate-800">₩250,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+                <!-- Card 7 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="hongdae" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/ArN1isy.jpeg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">홍대입구 미디어월 홀</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 마포구 · 프로젝션 매핑</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-slate-800">₩300,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+                <!-- Card 8 -->
+                <div class="group cursor-pointer gallery-item flex flex-col h-full bg-white rounded-3xl p-2 pb-4 shadow-sm border border-slate-100 hover:shadow-xl hover:border-[#1C44FF] transition-all duration-300" data-category="itaewon" onclick="window.location.href='space-detail.html'">
+                    <div class="rounded-[20px] overflow-hidden aspect-[4/3] mb-3 bg-slate-200 relative">
+                        <img src="https://i.imgur.com/OaebeEF.jpeg" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        <div class="absolute top-2 left-2 md:top-3 md:left-3 bg-slate-900/80 backdrop-blur px-2 py-1 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[9px] font-bold text-white shadow-sm whitespace-nowrap"><i class="fa-solid fa-hammer text-[7px] mr-1 text-[#F0F4FF]"></i>못질가능</div>
+                    </div>
+                    <div class="px-2 sm:px-3 flex-grow flex flex-col mt-1">
+                        <h4 class="text-[13px] sm:text-[15px] font-bold tracking-tight truncate">이태원 루프탑 갤러리</h4>
+                        <p class="text-[10px] sm:text-[12px] text-slate-400 font-light mt-1 mb-2">서울 용산구 · 야외 테라스</p>
+                        <span class="text-[13px] sm:text-[15px] font-bold mt-auto mb-3 text-slate-800">₩220,000<span class="text-slate-400 font-normal text-[9px] sm:text-[10px]"> / 일</span></span>
+                        <button type="button" class="w-full bg-slate-50 border border-slate-200 text-slate-600 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs group-hover:bg-[#1C44FF] group-hover:text-white group-hover:border-[#1C44FF] transition-all">공간 확인하기</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 3. P2P vs Large Split Card -->
+    <section class="py-24 max-w-[1100px] mx-auto px-6 border-b border-slate-100/50">
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="card-split p-12 cursor-pointer group" onclick="window.location.href='space-explore.html'">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4 block">For Solo Exhibitions</span>
+                    <h2 class="text-3xl font-bold mb-5 group-hover:text-[#1C44FF] transition-colors">P2P Space</h2>
+                    <p class="text-slate-500 font-light leading-relaxed max-w-xs text-base break-keep">
+                        개인 전시를 위한 아늑한 공간. <br>합리적인 비용으로 첫 무대를 시작하세요.
+                    </p>
+                </div>
+                <div class="flex justify-between items-end mt-12">
+                    <span class="text-xs font-medium opacity-40">소형 갤러리 & 유휴 공간</span>
+                    <button type="button" class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#1C44FF] shadow-sm group-hover:scale-110 group-hover:bg-[#1C44FF] group-hover:text-white transition-all duration-300">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-split p-12 bg-slate-900 text-white border border-slate-800 cursor-pointer group" onclick="window.location.href='space-explore.html'">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-widest opacity-50 mb-4 block text-[#8AA4FF]">For Group Exhibitions</span>
+                    <h2 class="text-3xl font-bold mb-5 text-[#8AA4FF] group-hover:text-white transition-colors">Large Gallery</h2>
+                    <p class="opacity-70 font-light leading-relaxed max-w-xs text-base break-keep">
+                        졸업 전시 및 단체전을 위한 공간.<br>다수의 인원과 대형 작품을 수용하는 전문 공간입니다.
+                    </p>
+                </div>
+                <div class="flex justify-between items-end mt-12">
+                    <span class="text-xs font-medium opacity-40 text-[#8AA4FF]">대형 갤러리 & 복합 문화 공간</span>
+                    <button type="button" class="w-12 h-12 rounded-full bg-[#1C44FF] flex items-center justify-center text-white shadow-md group-hover:scale-110 group-hover:bg-white group-hover:text-[#1C44FF] transition-all duration-300">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Rental Solution Section (Moved up according to order) -->
+    <section id="rental" class="py-24 bg-slate-50 border-b border-slate-100">
+        <div class="max-w-[1100px] mx-auto px-6">
+            <div class="mb-10 flex flex-col md:flex-row justify-between items-center md:items-end gap-6 text-center md:text-left">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-[#1C44FF] mb-3 block">Pass Freight</span>
+                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight">전시를 위한 물류 솔루션</h2>
+                </div>
+                <div class="flex flex-col md:flex-row gap-4 items-center">
+                    <div class="flex space-x-2 bg-white border border-slate-200 p-1 rounded-xl overflow-x-auto no-scrollbar w-full md:w-auto" id="rentalCategoryTabs">
+                        <button class="rental-tab active px-5 py-2.5 text-sm font-semibold rounded-lg bg-slate-800 shadow-sm text-white whitespace-nowrap transition" data-tab="lighting">조명기기</button>
+                        <button class="rental-tab px-5 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-800 transition whitespace-nowrap" data-tab="furniture">전시좌대</button>
+                        <button class="rental-tab px-5 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-800 transition whitespace-nowrap" data-tab="digital">영상/음향</button>
+                        <button class="rental-tab px-5 py-2.5 text-sm font-semibold rounded-lg text-slate-500 hover:text-slate-800 transition whitespace-nowrap" data-tab="package">운송/패키지</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rental Items with Stepper & Add Button -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12" id="rentalProductsGrid">
+                <!-- JS Data injected here -->
+            </div>
+
+            <div class="text-center mt-12">
+                <button type="button" class="bg-[#1C44FF] text-white px-8 md:px-12 py-4 rounded-full font-bold text-sm hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 flex items-center justify-center mx-auto" onclick="window.location.href='mypage.html'">
+                    <i class="fa-solid fa-cart-arrow-down mr-2"></i> 선택한 물품 한 번에 렌탈 신청하기
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Community Section -->
+    <section id="community" class="py-24 bg-white border-b border-slate-100/50">
+        <div class="max-w-[1100px] mx-auto px-6">
+            <div class="mb-14 flex flex-col md:flex-row justify-between items-center md:items-end gap-6 text-center md:text-left">
+                <div>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-[#1C44FF] mb-3 block">Community</span>
+                    <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">함께 전시할 파티원을 구해보세요.</h2>
+                    <p class="text-slate-500 font-light text-base leading-relaxed break-keep">
+                        비용은 나누고, 전시는 더 풍성하게.<br class="hidden md:block">
+                        조건에 맞는 작가들과 그룹전을 기획하고 대관료를 N분의 1 결제 하세요.
+                    </p>
+                </div>
+                <button type="button" class="text-sm font-semibold text-[#1C44FF] bg-[#F0F4FF] px-5 py-2.5 rounded-full hover:bg-[#1C44FF] hover:text-white transition whitespace-nowrap shadow-sm" onclick="window.location.href='community-explore.html'">전체보기 <i class="fa-solid fa-chevron-right ml-1"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1 -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-[#1C44FF] hover:shadow-xl transition cursor-pointer group flex flex-col" onclick="window.location.href='community-detail.html'">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="bg-[#F0F4FF] text-[#1C44FF] text-[10px] font-bold px-2.5 py-1 rounded-md">모집중</span>
+                        <div class="flex items-center gap-1 text-slate-400 text-xs"><i class="fa-regular fa-eye"></i> 124</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-4 group-hover:text-[#1C44FF] transition line-clamp-2 leading-snug tracking-tight">성수 브루잉 팝업홀에서 5일간 함께할 미디어 아트 작가 구합니다!</h4>
+                    <div class="space-y-2 mb-6 text-xs text-slate-500 font-medium mt-auto">
+                        <p class="flex items-center gap-2"><i class="fa-regular fa-calendar w-4 text-center text-slate-400"></i> 2026.08.10 - 08.15</p>
+                        <p class="flex items-center gap-2"><i class="fa-solid fa-wallet w-4 text-center text-[#1C44FF]"></i> 예상 1인당 25만원 (N분의 1)</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                        <div class="flex items-center gap-2">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" class="w-6 h-6 rounded-full object-cover">
+                            <span class="text-xs font-bold text-slate-700">김서연</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-sm font-bold text-[#1C44FF] bg-[#F0F4FF] px-2.5 py-1 rounded-lg">
+                            <i class="fa-solid fa-user-group text-[10px]"></i> 2/4명
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 2 -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-[#1C44FF] transition cursor-pointer group flex flex-col" onclick="window.location.href='community-detail.html'">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="bg-[#F0F4FF] text-[#1C44FF] text-[10px] font-bold px-2.5 py-1 rounded-md">모집중</span>
+                        <div class="flex items-center gap-1 text-slate-400 text-xs"><i class="fa-regular fa-eye"></i> 89</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-4 group-hover:text-[#1C44FF] transition line-clamp-2 leading-snug tracking-tight">인사동 대형 갤러리 2주 대관! 회화 작가님 3분 모십니다.</h4>
+                    <div class="space-y-2 mb-6 text-xs text-slate-500 font-medium mt-auto">
+                        <p class="flex items-center gap-2"><i class="fa-regular fa-calendar w-4 text-center text-slate-400"></i> 2026.09.01 - 09.14</p>
+                        <p class="flex items-center gap-2"><i class="fa-solid fa-wallet w-4 text-center text-[#1C44FF]"></i> 예상 1인당 40만원 (N분의 1)</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                        <div class="flex items-center gap-2">
+                            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=100&q=80" class="w-6 h-6 rounded-full object-cover">
+                            <span class="text-xs font-bold text-slate-700">이준호</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-sm font-bold text-[#1C44FF] bg-[#F0F4FF] px-2.5 py-1 rounded-lg">
+                            <i class="fa-solid fa-user-group text-[10px]"></i> 1/4명
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-slate-300 transition cursor-pointer group flex flex-col opacity-60" onclick="showToast('이미 마감된 모집글입니다.')">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="bg-slate-200 text-slate-500 text-[10px] font-bold px-2.5 py-1 rounded-md">모집마감</span>
+                        <div class="flex items-center gap-1 text-slate-400 text-xs"><i class="fa-regular fa-eye"></i> 342</div>
+                    </div>
+                    <h4 class="font-bold text-lg mb-4 text-slate-500 line-clamp-2 leading-snug tracking-tight">한남 루프탑 주말 팝업 전시 파티 모집완료</h4>
+                    <div class="space-y-2 mb-6 text-xs text-slate-400 font-medium mt-auto">
+                        <p class="flex items-center gap-2"><i class="fa-regular fa-calendar w-4 text-center"></i> 2026.07.24 - 07.26</p>
+                        <p class="flex items-center gap-2"><i class="fa-solid fa-wallet w-4 text-center"></i> 확정 1인당 15만원</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+                        <div class="flex items-center gap-2">
+                            <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=100&q=80" class="w-6 h-6 rounded-full object-cover grayscale">
+                            <span class="text-xs font-bold text-slate-500">박지민</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-sm font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            <i class="fa-solid fa-user-check text-[10px]"></i> 3/3명
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. AI Section (Analyzing Animation) -->
+    <section id="ai" class="py-24 bg-slate-50 border-b border-slate-100">
+        <div class="max-w-[1100px] mx-auto px-6 grid md:grid-cols-2 gap-20 items-center">
+            <div class="relative rounded-[40px] overflow-hidden bg-white aspect-[16/10] shadow-lg border border-slate-200">
+                <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover grayscale opacity-40">
+                <div class="scan-line"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-center p-8">
+                        <div class="w-16 h-16 bg-[#1C44FF] text-white rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 shadow-xl shadow-blue-500/30">
+                            <i class="fa-solid fa-vr-cardboard"></i>
+                        </div>
+                        <h4 class="text-xl font-bold tracking-tight text-slate-800">AI Space Twin</h4>
+                        <p class="text-xs text-slate-400 mt-2 font-mono">Analyzing Floor Plan...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center md:text-left">
+                <span class="text-[11px] font-bold uppercase tracking-widest text-[#1C44FF] mb-3 block">AI Curation</span>
+                <h2 class="text-3xl font-bold mb-6 tracking-tight">데이터로 설계하는 전시.</h2>
+                <p class="text-slate-500 font-light text-base leading-relaxed mb-10 break-keep">
+                    전시 공간의 도면을 AI가 분석하여 작품의 가상 배치를 지원합니다.<br>
+                    층고, 조명 각도, 관람객 동선을 고려한 최적의 레이아웃을 지금 확인하세요.
+                </p>
+                <button type="button" class="btn-brand shadow-lg" onclick="window.location.href='ai-curation.html'">AI 가상 배치 도구 열기 <i class="fa-solid fa-wand-magic-sparkles ml-2"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Subsidy & Admin Support (Toss Style Integration - REPLACEMENT) -->
+    <section id="subsidy" class="py-24 bg-white">
+        <div class="max-w-[1100px] mx-auto px-6">
+            
+            <!-- Trending Subsidies (Horizontal Scroll) -->
+            <div class="mb-12">
+                <h3 class="text-xl font-bold mb-6 tracking-tight text-slate-800 flex items-center gap-2"><i class="fa-solid fa-fire text-red-500"></i> 실시간 인기 지원금</h3>
+                <div class="flex gap-4 overflow-x-auto no-scrollbar pb-6 snap-x">
+                    <!-- Subsidy Card 1 -->
+                    <div class="min-w-[280px] sm:min-w-[320px] bg-white border border-slate-200 rounded-3xl p-5 cursor-pointer hover:border-[#1C44FF] transition snap-start flex-shrink-0 shadow-sm" onclick="window.location.href='find-subsidy.html'">
+                        <div class="flex gap-3 mb-4">
+                            <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#1C44FF] flex-shrink-0 border border-blue-100"><i class="fa-solid fa-palette"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold mb-0.5">문화체육관광부</p>
+                                <h4 class="text-sm font-bold text-slate-800 tracking-tight truncate">2026 K-Art 청년 전시 지원</h4>
+                            </div>
+                        </div>
+                        <div class="flex items-end justify-between pt-4 border-t border-slate-100">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-medium mb-1">최대 지원</p>
+                                <p class="text-base font-bold text-[#1C44FF]">₩3,000,000</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1.5 rounded-lg">D-5 마감임박</span>
+                        </div>
+                    </div>
+                    <!-- Subsidy Card 2 -->
+                    <div class="min-w-[280px] sm:min-w-[320px] bg-white border border-slate-200 rounded-3xl p-5 cursor-pointer hover:border-[#1C44FF] transition snap-start flex-shrink-0 shadow-sm" onclick="window.location.href='find-subsidy.html'">
+                        <div class="flex gap-3 mb-4">
+                            <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-600 flex-shrink-0 border border-slate-200"><i class="fa-solid fa-building-columns"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold mb-0.5">서울문화재단</p>
+                                <h4 class="text-sm font-bold text-slate-800 tracking-tight truncate">청년 예술창작활동 지원</h4>
+                            </div>
+                        </div>
+                        <div class="flex items-end justify-between pt-4 border-t border-slate-100">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-medium mb-1">최대 지원</p>
+                                <p class="text-base font-bold text-[#1C44FF]">₩5,000,000</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1.5 rounded-lg">D-12</span>
+                        </div>
+                    </div>
+                    <!-- Subsidy Card 3 -->
+                    <div class="min-w-[280px] sm:min-w-[320px] bg-white border border-slate-200 rounded-3xl p-5 cursor-pointer hover:border-[#1C44FF] transition snap-start flex-shrink-0 shadow-sm" onclick="window.location.href='find-subsidy.html'">
+                        <div class="flex gap-3 mb-4">
+                            <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 flex-shrink-0 border border-indigo-100"><i class="fa-solid fa-map-location-dot"></i></div>
+                            <div>
+                                <p class="text-[10px] text-slate-500 font-bold mb-0.5">한국문화예술위원회</p>
+                                <h4 class="text-sm font-bold text-slate-800 tracking-tight truncate">신진미술인 임차료 지원</h4>
+                            </div>
+                        </div>
+                        <div class="flex items-end justify-between pt-4 border-t border-slate-100">
+                            <div>
+                                <p class="text-[10px] text-slate-400 font-medium mb-1">최대 지원</p>
+                                <p class="text-base font-bold text-[#1C44FF]">₩1,500,000</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1.5 rounded-lg">D-30</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Subsidy & Admin Banner -->
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <!-- Left: Toss Style Subsidy Box -->
+                <div class="bg-slate-50 rounded-[40px] p-8 md:p-12 border border-slate-100 flex flex-col h-full justify-between shadow-sm">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 text-[#1C44FF] text-[10px] font-bold mb-6 uppercase tracking-widest border border-blue-200">
+                            <i class="fa-solid fa-bolt text-yellow-500"></i> 원클릭 자동 완성
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-bold mb-6 tracking-tight text-slate-800 leading-snug break-keep">
+                            김서연 작가님,<br>
+                            지금 신청 가능한<br>
+                            <span class="text-[#1C44FF]">지원금이 3건</span> 있어요.
+                        </h2>
+                        <p class="text-slate-500 font-medium text-base mb-10 break-keep">
+                            청년 창작자 전시 지원 사업부터 공간 임차료 지원까지,<br>
+                            갤러링크 프로필 하나로 서류 작성을 끝내세요.
+                        </p>
+                    </div>
+                    <button type="button" class="w-full bg-[#1d1d1f] text-white py-4 rounded-2xl font-bold text-base shadow-lg hover:bg-black transition flex items-center justify-center gap-2" onclick="window.location.href='find-subsidy-application.html'">
+                        내 프로필로 원클릭 지원하기 <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Right: Shrunken Mini Admin Cards -->
+                <div class="flex flex-col gap-8">
+                    <div class="space-y-2">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Administration Support</p>
+                        <h3 class="text-2xl font-bold text-slate-800 tracking-tight">복잡한 행정도 가볍게.</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Mini Card 1 -->
+                        <div class="mini-doc-card group admin-doc-card" data-doc="contract">
+                            <div class="w-10 h-10 bg-blue-50 text-[#1C44FF] rounded-xl flex items-center justify-center text-sm flex-shrink-0 group-hover:bg-white transition shadow-sm border border-blue-50">
+                                <i class="fa-solid fa-file-contract"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 mb-0.5">표준 계약서</h4>
+                                <p class="text-[11px] text-slate-400 truncate">미리보기 클릭</p>
+                            </div>
+                        </div>
+                        <!-- Mini Card 2 -->
+                        <div class="mini-doc-card group admin-doc-card" data-doc="receipt">
+                            <div class="w-10 h-10 bg-blue-50 text-[#1C44FF] rounded-xl flex items-center justify-center text-sm flex-shrink-0 group-hover:bg-white transition shadow-sm border border-blue-50">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 mb-0.5">통합 영수증</h4>
+                                <p class="text-[11px] text-slate-400 truncate">미리보기 클릭</p>
+                            </div>
+                        </div>
+                        <!-- Mini Card 3 -->
+                        <div class="mini-doc-card group admin-doc-card" data-doc="insurance">
+                            <div class="w-10 h-10 bg-blue-50 text-[#1C44FF] rounded-xl flex items-center justify-center text-sm flex-shrink-0 group-hover:bg-white transition shadow-sm border border-blue-50">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 mb-0.5">단기 보험</h4>
+                                <p class="text-[11px] text-slate-400 truncate">미리보기 클릭</p>
+                            </div>
+                        </div>
+                        <!-- Mini Card 4 -->
+                        <div class="mini-doc-card group" onclick="window.location.href='about-us.html#support'">
+                            <div class="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center text-sm flex-shrink-0 group-hover:bg-white transition shadow-sm border border-slate-100">
+                                <i class="fa-solid fa-headset"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="font-bold text-sm text-slate-800 mb-0.5">1:1 행정 지원</h4>
+                                <p class="text-[11px] text-slate-400 truncate">전문 상담 연결</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200 relative">
+                        <div class="absolute top-4 right-6 pointer-events-none">
+                            <div class="stamp">승인</div>
+                        </div>
+                        <p class="text-xs text-slate-500 leading-relaxed font-light break-keep">갤러링크의 모든 행정 서류는 법률 자문을 거친 표준 양식을 제공하며, 지원금 정산 시 기관에서 요구하는 증빙을 한 번에 다운로드할 수 있습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-16 bg-white border-t border-slate-100 text-center md:text-left relative mt-12 pb-24 md:pb-16">
+        <div class="max-w-[1100px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center opacity-80">
+            <div class="mb-8 md:mb-0">
+                <span class="font-bold text-2xl tracking-tighter text-[#1C44FF]">Gallerink</span>
+            </div>
+            <div class="flex space-x-10 text-[11px] font-semibold tracking-widest uppercase text-slate-400">
+                <a href="index.html" class="hover:text-[#1C44FF] transition">메인페이지</a>
+                <button type="button" class="hover:text-[#1C44FF] transition" onclick="showToast('개인정보보호정책 팝업이 열립니다.')">개인정보보호정책</button>
+                <button type="button" class="hover:text-[#1C44FF] transition" onclick="showToast('이용약관 팝업이 열립니다.')">이용약관</button>
+            </div>
+        </div>
+        <div class="text-center mt-10 opacity-30 text-[10px] tracking-[0.3em] uppercase font-semibold text-[#1C44FF]">
+            © 2026 GALLERINK. DIRECTED BY HONG DESIGN.
+        </div>
+    </footer>
+
+    <!-- Global Elements -->
+    <button type="button" id="scrollTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-8 right-8 z-[130] w-12 h-12 bg-[#1C44FF] text-white rounded-full shadow-xl flex items-center justify-center hover:bg-blue-700 transition-all duration-300 opacity-0 invisible transform translate-y-4">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+    <div id="toastContainer" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4"></div>
+
+    <!-- Document Preview Modal -->
+    <div id="docPreviewModal" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-8 w-[90%] max-w-3xl transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold" id="docPreviewTitle">문서 미리보기</h3>
+                <button type="button" class="close-modal text-slate-400 hover:text-black transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div id="docContentArea" class="flex-grow overflow-y-auto border border-slate-200 rounded-xl p-8 bg-white shadow-inner text-sm text-slate-800 leading-relaxed font-serif relative">
+                <!-- JS dynamically injects document preview here -->
+            </div>
+            <div class="mt-8 flex flex-col sm:flex-row justify-between items-center border-t border-slate-100 pt-6 gap-4">
+                <div class="flex gap-3 w-full sm:w-auto">
+                    <button type="button" class="flex-1 sm:flex-none text-slate-600 bg-slate-100 px-5 py-3 rounded-xl hover:bg-slate-200 transition font-semibold text-sm flex items-center justify-center" onclick="showToast('PDF 다운로드를 시작합니다.')">
+                        <i class="fa-solid fa-file-pdf mr-2 text-red-500"></i> PDF
+                    </button>
+                    <button type="button" class="flex-1 sm:flex-none text-slate-600 bg-slate-50 px-5 py-3 rounded-xl hover:bg-slate-200 transition font-semibold text-sm flex items-center justify-center" onclick="showToast('HWP 파일이 생성되었습니다.')">
+                        <i class="fa-solid fa-file-word mr-2 text-blue-500"></i> 한글
+                    </button>
+                </div>
+                <button type="button" class="bg-[#1C44FF] text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition w-full sm:w-auto" onclick="window.location.href='mypage.html'">마이페이지에서 관리하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuClose = document.getElementById('menu-close');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileOverlay = document.getElementById('mobile-menu-overlay');
+
+            function toggleMenu(show) {
+                if(show) {
+                    mobileOverlay.classList.remove('hidden');
+                    setTimeout(() => mobileOverlay.classList.add('opacity-100'), 10);
+                    mobileMenu.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    mobileOverlay.classList.remove('opacity-100');
+                    setTimeout(() => mobileOverlay.classList.add('hidden'), 300);
+                    mobileMenu.classList.remove('open');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            menuToggle?.addEventListener('click', () => toggleMenu(true));
+            menuClose?.addEventListener('click', () => toggleMenu(false));
+            mobileOverlay?.addEventListener('click', () => toggleMenu(false));
+
+            // Filtering Logic (Simple)
+            const filterBtns = document.querySelectorAll('.filter-tag');
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const val = btn.getAttribute('data-filter');
+                    galleryItems.forEach(item => {
+                        if(val === 'all' || item.getAttribute('data-category') === val) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+
+            // Rental Tabs Data
+            const safeImg1 = 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=400&q=80';
+            const safeImg2 = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80';
+            const safeImg3 = 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=400&q=80';
+            const safeImg4 = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80';
+            const safeImg5 = 'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=400&q=80';
+
+            const rentalData = {
+                lighting: [
+                    { image: safeImg1, name: '15W 레일 스포트라이트', price: '₩5,000' },
+                    { image: safeImg2, name: '30W 핀조명 프로젝터', price: '₩8,000' },
+                    { image: safeImg3, name: '플로어 스탠드형 조명', price: '₩10,000' },
+                    { image: safeImg4, name: '벽면 워시 LED', price: '₩20,000' }
+                ],
+                furniture: [
+                    { image: safeImg5, name: '화이트 큐브 좌대 (M)', price: '₩15,000' },
+                    { image: safeImg1, name: '투명 아크릴 쇼케이스', price: '₩10,000' },
+                    { image: safeImg2, name: '안내데스크 화이트', price: '₩25,000' },
+                    { image: safeImg3, name: '가변형 전시장 파티션', price: '₩40,000' }
+                ],
+                digital: [
+                    { image: safeImg4, name: '55인치 4K 모니터', price: '₩65,000' },
+                    { image: safeImg5, name: '단초점 빔프로젝터', price: '₩80,000' },
+                    { image: safeImg1, name: '무지향성 스피커', price: '₩30,000' },
+                    { image: safeImg2, name: '태블릿 도슨트 키트', price: '₩15,000' }
+                ],
+                package: [
+                    { image: safeImg3, name: '베이직 철거 패키지', price: '₩150,000' },
+                    { image: safeImg4, name: '작품 포장 박스 세트', price: '₩30,000' },
+                    { image: safeImg5, name: '소형 작품 운송 (다마스)', price: '₩50,000' },
+                    { image: safeImg1, name: '작품 설치 도우미 (1인)', price: '₩100,000' }
+                ]
+            };
+
+            const rentalGrid = document.getElementById('rentalProductsGrid');
+            const rentalTabs = document.querySelectorAll('.rental-tab');
+
+            function renderRentalItems(category) {
+                if(!rentalGrid) return;
+                rentalGrid.innerHTML = '';
+                rentalData[category].forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = `border border-slate-100 rounded-2xl overflow-hidden hover:border-[#1C44FF] hover:shadow-lg transition group bg-white flex flex-col cursor-pointer`;
+                    card.onclick = () => window.location.href = 'rental-detail.html';
+                    card.innerHTML = `
+                        <div class="aspect-video bg-slate-100 overflow-hidden relative">
+                            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        </div>
+                        <div class="p-3 sm:p-4 flex flex-col flex-grow">
+                            <h5 class="font-bold text-[12px] sm:text-sm mb-1 truncate text-slate-800">${item.name}</h5>
+                            <p class="font-bold text-[#1C44FF] text-[11px] sm:text-sm mb-3">${item.price}</p>
+                            
+                            <div class="mt-auto flex flex-col xl:flex-row items-center justify-between gap-2 border-t border-slate-50 pt-3">
+                                <div class="flex items-center bg-slate-50 rounded-lg border border-slate-200 h-8 w-full xl:w-auto justify-between px-1" onclick="event.stopPropagation()">
+                                    <button type="button" class="w-6 h-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition rounded-md" onclick="updateQty(this, -1)"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                    <span class="w-6 text-center text-xs font-bold qty-val">1</span>
+                                    <button type="button" class="w-6 h-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition rounded-md" onclick="updateQty(this, 1)"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                </div>
+                                <button type="button" class="w-full xl:w-auto px-3 h-8 rounded-lg bg-slate-800 text-white flex items-center justify-center hover:bg-black transition text-[11px] font-bold" onclick="event.stopPropagation(); showToast('${item.name} 장바구니에 담겼습니다.')">담기</button>
+                            </div>
+                        </div>
+                    `;
+                    rentalGrid.appendChild(card);
+                });
+            }
+
+            rentalTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    rentalTabs.forEach(t => { t.classList.remove('active', 'bg-slate-800', 'shadow-sm', 'text-white'); t.classList.add('text-slate-500'); });
+                    tab.classList.add('active', 'bg-slate-800', 'shadow-sm', 'text-white'); tab.classList.remove('text-slate-500');
+                    renderRentalItems(tab.getAttribute('data-tab'));
+                });
+            });
+            renderRentalItems('lighting');
+
+            // Admin Doc Preview Logic
+            const adminCards = document.querySelectorAll('.admin-doc-card');
+            const docPreviewModal = document.getElementById('docPreviewModal');
+            const docTitle = document.getElementById('docPreviewTitle');
+            const docContentArea = document.getElementById('docContentArea');
+            const closeDocBtns = docPreviewModal.querySelectorAll('.close-modal');
+
+            const templates = {
+                contract: `<div class="p-10 space-y-6"><h2 class="text-2xl font-bold text-center underline mb-10">표준 임대차/전대차 계약서</h2><p>본 계약은 갤러링크 플랫폼 내의 공간 임대 거래를 위해 작성되었으며, 임대인(소유주)과 임차인(창작자) 간의 권리 의무를 규정합니다.</p><p>제1조 (목적) ...</p><p>제2조 (대관료) ...</p><div class="flex justify-end pt-10"><div class="stamp border-[#1C44FF] text-[#1C44FF]">승인</div></div></div>`,
+                receipt: `<div class="p-10 border border-slate-300 max-w-lg mx-auto"><h2 class="text-xl font-bold text-center mb-6">전시 대관료 영수증</h2><div class="flex justify-between border-b pb-2 mb-4"><span>금액</span><span class="font-bold">₩960,000</span></div><div class="flex justify-between border-b pb-2 mb-4"><span>내역</span><span>전시공간 A구역 대관</span></div><div class="text-right pt-6 stamp ml-auto">APPROVED</div></div>`,
+                insurance: `<div class="p-10 bg-slate-50 border-4 border-double border-slate-200"><h2 class="text-2xl font-bold text-center mb-10">단기 전시 종합 보험 증권</h2><ul class="space-y-4"><li><strong>피보험자:</strong> Gallerink 아티스트 회원</li><li><strong>보장범위:</strong> 작품 파손 및 공간 훼손</li><li><strong>최대 보상액:</strong> ₩50,000,000</li></ul><div class="stamp mt-10 ml-auto">보증</div></div>`
+            };
+
+            adminCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const type = card.getAttribute('data-doc');
+                    docTitle.textContent = card.querySelector('h4').textContent + ' 미리보기';
+                    docContentArea.innerHTML = templates[type];
+                    docPreviewModal.classList.remove('hidden');
+                    setTimeout(() => { docPreviewModal.classList.remove('opacity-0'); docPreviewModal.firstElementChild.classList.remove('scale-95'); docPreviewModal.firstElementChild.classList.add('scale-100'); }, 10);
+                });
+            });
+
+            closeDocBtns.forEach(btn => btn.addEventListener('click', () => {
+                docPreviewModal.classList.add('opacity-0'); docPreviewModal.firstElementChild.classList.remove('scale-100'); docPreviewModal.firstElementChild.classList.add('scale-95');
+                setTimeout(() => docPreviewModal.classList.add('hidden'), 300);
+            }));
+        });
+
+        // 렌탈 아이템 수량 조절
+        function updateQty(btn, change) {
+            const span = btn.parentElement.querySelector('.qty-val');
+            let val = parseInt(span.textContent) + change;
+            if(val < 1) val = 1;
+            if(val > 99) val = 99;
+            span.textContent = val;
+        }
+
+        let toastTimeout;
+        function showToast(message) {
+            const toastContainer = document.getElementById('toastContainer');
+            toastContainer.innerHTML = '';
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-800 text-white shadow-xl rounded-xl px-5 py-3.5 flex items-center justify-center gap-3 transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto text-center text-sm font-medium mx-auto w-fit';
+            toast.innerHTML = `<i class=\"fa-solid fa-check text-green-400\"></i><span class=\"whitespace-nowrap\">${message}</span>`;
+            toastContainer.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
+            if(toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 2500);
+        }
+
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('scrollTopBtn');
+            if (window.scrollY > 300) { btn.classList.remove('opacity-0', 'invisible', 'translate-y-4'); btn.classList.add('opacity-100', 'visible', 'translate-y-0'); }
+            else { btn.classList.add('opacity-0', 'invisible', 'translate-y-4'); btn.classList.remove('opacity-100', 'visible', 'translate-y-0'); }
+        });
+    </script>
+</body>
+</html>

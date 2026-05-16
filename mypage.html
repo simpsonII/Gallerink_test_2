@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth" style="scroll-padding-top: 64px;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>마이페이지 - Gallerink</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@100;300;400;500;700&display=swap');
+        
+        :root {
+            --brand-primary: #1C44FF;
+            --brand-light: #F0F4FF;
+            --apple-black: #1d1d1f;
+            --apple-gray: #f5f5f7;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: #f8fafc; 
+            color: var(--apple-black);
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.015em;
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Mobile Menu Animation */
+        #mobile-menu {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+        }
+        #mobile-menu.open {
+            transform: translateX(0);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Unified Card Style - Removed AI-like thick borders */
+        .dashboard-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .dashboard-card:hover {
+            border-color: var(--brand-primary);
+            box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Mode Switcher Styles */
+        .mode-tab {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mode-tab.active {
+            background-color: white;
+            color: var(--brand-primary);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .view-section { animation: fadeIn 0.4s ease-out forwards; }
+
+        .progress-fill {
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="pt-14 text-slate-800">
+
+    <!-- Global Navigation -->
+    <nav class="glass-nav fixed top-0 left-0 w-full z-[100] h-14 flex items-center transition-all duration-300">
+        <div class="max-w-[1100px] mx-auto w-full px-6 flex justify-between items-center">
+            <a href="index.html" class="flex items-center flex-shrink-0">
+                <span class="font-bold text-2xl tracking-tighter text-[#1C44FF]">Gallerink</span>
+            </a>
+
+            <!-- Desktop Menu -->
+            <div class="hidden lg:flex space-x-8 text-[13px] font-medium opacity-70">
+                <a href="space-explore.html" class="hover:text-[#1C44FF] transition">Explore</a>
+                <a href="rental-explore.html" class="hover:text-[#1C44FF] transition">Rental</a>
+                <a href="community-explore.html" class="hover:text-[#1C44FF] transition">Community</a>
+                <a href="ai-curation.html" class="hover:text-[#1C44FF] transition">AI Curation</a>
+                <a href="find-subsidy.html" class="hover:text-[#1C44FF] transition">Find Subsidy</a>
+                <a href="about-us.html" class="hover:text-[#1C44FF] transition">About Us</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button type="button" class="relative text-slate-400 hover:text-[#1C44FF] transition flex-shrink-0" onclick="showToast('새로운 알림이 없습니다.')">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden cursor-pointer border border-slate-200 flex-shrink-0 hidden md:block" onclick="showToast('회원 정보 수정 페이지로 이동합니다.')">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" class="w-full h-full object-cover">
+                </div>
+                <button type="button" id="menu-toggle" class="lg:hidden text-slate-800 text-xl focus:outline-none p-2 flex-shrink-0">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Slide Menu -->
+    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black/40 z-[140] hidden opacity-0 transition-opacity duration-300"></div>
+    <div id="mobile-menu" class="fixed top-0 right-0 w-[280px] h-full bg-white z-[150] shadow-2xl flex flex-col p-8 lg:hidden">
+        <div class="flex justify-between items-center mb-12">
+            <span class="font-bold text-xl text-[#1C44FF]">Gallerink</span>
+            <button type="button" id="menu-close" class="text-slate-400 text-2xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <nav class="flex flex-col space-y-6 text-lg font-semibold text-slate-800">
+            <a href="space-explore.html">Explore</a>
+            <a href="rental-explore.html">Rental</a>
+            <a href="community-explore.html">Community</a>
+            <a href="ai-curation.html">AI Curation</a>
+            <a href="find-subsidy.html">Find Subsidy</a>
+            <a href="about-us.html">About Us</a>
+        </nav>
+        <div class="mt-auto pt-8 border-t border-slate-100 flex flex-col gap-4">
+            <button type="button" onclick="showToast('설정 페이지는 준비 중입니다.')" class="w-full py-3 border border-slate-200 text-slate-500 rounded-xl font-bold">설정</button>
+            <button type="button" onclick="showToast('로그아웃 되었습니다.')" class="w-full py-3 bg-slate-100 text-slate-600 rounded-xl font-bold">로그아웃</button>
+        </div>
+    </div>
+
+    <main class="max-w-[1100px] mx-auto px-6 py-10 flex flex-col lg:flex-row gap-8 min-h-screen">
+        
+        <!-- Left Sidebar -->
+        <aside class="w-full lg:w-64 flex-shrink-0">
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 mb-6 text-center shadow-sm">
+                <div class="w-20 h-20 rounded-full bg-slate-100 mx-auto mb-4 overflow-hidden border border-slate-200 relative group">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer" onclick="showToast('프로필 이미지를 변경합니다.')">
+                        <i class="fa-solid fa-camera text-white text-sm"></i>
+                    </div>
+                </div>
+                <h2 class="text-lg font-bold mb-1">김서연 작가님</h2>
+                <p class="text-xs text-slate-400 mb-6 font-medium">Pro Artist Track</p>
+                
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                        <p class="text-slate-800">3건</p>
+                        <p class="text-slate-400 text-[10px] font-medium whitespace-nowrap">전시활동</p>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                        <p class="text-slate-800">1건</p>
+                        <p class="text-slate-400 text-[10px] font-medium whitespace-nowrap">공간관리</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm lg:sticky lg:top-20">
+                <div class="flex flex-col text-sm font-medium">
+                    <a href="javascript:void(0)" class="flex items-center px-6 py-4 text-slate-800 bg-slate-50 border-l-4 border-[#1C44FF]">
+                        <i class="fa-solid fa-house-chimney w-6 text-center text-[#1C44FF] mr-1"></i> 대시보드
+                    </a>
+                    <button type="button" class="flex items-center px-6 py-4 text-slate-500 hover:bg-slate-50 transition border-b border-slate-50 text-left" onclick="showToast('알림 내역이 없습니다.')">
+                        <i class="fa-regular fa-bell w-6 text-center text-slate-400 mr-1"></i> 알림함
+                    </button>
+                    <button type="button" class="flex items-center px-6 py-4 text-slate-500 hover:bg-slate-50 transition text-left" onclick="showToast('계정 설정 페이지로 이동합니다.')">
+                        <i class="fa-solid fa-gear w-6 text-center text-slate-400 mr-1"></i> 계정 설정
+                    </button>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Right Content Area -->
+        <div class="flex-grow flex flex-col min-w-0">
+            
+            <!-- Mode Switching Tabs (Unified Design) -->
+            <div class="flex bg-slate-200/50 p-1.5 rounded-2xl mb-8 w-fit mx-auto md:mx-0 border border-slate-200">
+                <button id="artistModeBtn" class="mode-tab active px-6 md:px-10 py-3 rounded-xl text-sm font-bold flex items-center gap-2" onclick="switchMode('artist')">
+                    <i class="fa-solid fa-palette text-xs"></i> 창작자 활동
+                </button>
+                <button id="hostModeBtn" class="mode-tab px-6 md:px-10 py-3 rounded-xl text-sm font-bold text-slate-500 flex items-center gap-2" onclick="switchMode('host')">
+                    <i class="fa-solid fa-store text-xs"></i> 호스트 활동
+                </button>
+            </div>
+
+            <!-- Artist Section View -->
+            <div id="artistSection" class="view-section space-y-6">
+                
+                <!-- 1-1. Joint Payment Status (N분의 1) -->
+                <section class="dashboard-card p-6 md:p-8 border-2 border-slate-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-8">
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-[#F0F4FF] text-[#1C44FF] text-[10px] font-bold px-2.5 py-1 rounded-md uppercase border border-blue-100">공동 결제 대기</span>
+                                <span class="text-[11px] text-slate-400 font-medium">마감 D-2</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800 leading-tight tracking-tight">성수 브루잉 팝업홀 - 도심 속의 파동 (그룹전)</h3>
+                        </div>
+                        <button type="button" class="bg-slate-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl hover:bg-black transition flex items-center gap-2 flex-shrink-0" onclick="showToast('초대 링크가 복사되었습니다.')">
+                            <i class="fa-solid fa-link text-[10px]"></i> 파티원 초대하기
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6 pb-6 border-b border-slate-200">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">나의 결제 분담액 (N분의 1)</p>
+                                <div class="flex items-end gap-2">
+                                    <span class="text-3xl font-bold text-[#1C44FF]">₩250,000</span>
+                                    <span class="text-sm text-slate-400 font-medium mb-1">/ ₩1,000,000</span>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-slate-500">결제 참여 현황</span>
+                                    <span class="text-[#1C44FF]">3 / 4명 완료</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-[#1C44FF] rounded-full progress-fill" style="width: 75%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <button type="button" class="p-3 bg-[#1C44FF] text-white rounded-xl text-[11px] font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition" onclick="showToast('결제창으로 이동합니다.')">내 몫 결제하기</button>
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center gap-2 opacity-60">
+                                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=80" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-[10px] font-bold text-emerald-500 whitespace-nowrap">이준호 완료</span>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center gap-2 opacity-60">
+                                <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=80" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-[10px] font-bold text-emerald-500 whitespace-nowrap">박지민 완료</span>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center gap-2 opacity-60">
+                                <img src="https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=80" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-[10px] font-bold text-emerald-500 whitespace-nowrap">최민영 완료</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 1-2. Subsidy Status (Clean Border) -->
+                    <a href="find-subsidy.html" class="dashboard-card p-6 flex flex-col h-full">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-hand-holding-dollar text-slate-400"></i> 나의 지원금 현황</h3>
+                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                        </div>
+                        <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex-grow flex flex-col justify-center">
+                            <span class="bg-slate-800 text-white text-[9px] font-bold px-2 py-0.5 rounded mb-3 w-fit">서류 심사 중</span>
+                            <h4 class="font-bold text-sm text-slate-800 mb-1 leading-snug break-keep">2026 K-Art 청년 창작자 전시 지원 사업</h4>
+                            <p class="text-[10px] text-slate-400 mb-4">₩1,000,000 신청 완료</p>
+                            <div class="flex justify-between items-center text-[10px] text-slate-400 pt-3 border-t border-slate-200 mt-auto">
+                                <span>접수일: 2026.05.06</span>
+                                <span class="text-[#1C44FF] font-bold">진행률 30%</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- 1-3. Confirmed Exhibition (Clean Border) -->
+                    <section class="dashboard-card p-6 flex flex-col h-full">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-calendar-check text-slate-400"></i> 확정된 전시 일정</h3>
+                        </div>
+                        <div class="flex gap-4 items-center flex-grow">
+                            <div class="w-20 h-20 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
+                                <img src="https://ibb.co/TDdycxhm" class="w-full h-full object-cover grayscale">
+                            </div>
+                            <div class="min-w-0 flex-grow">
+                                <span class="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded mb-1 inline-block">D-12</span>
+                                <h4 class="text-sm font-bold text-slate-800 truncate mb-1">연남 1층 복층 쇼룸</h4>
+                                <p class="text-[10px] text-slate-500 truncate mb-2">05.16 - 05.20 개인전</p>
+                                <div class="flex gap-1.5">
+                                    <a href="ai-curation.html" class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-1.5 rounded-lg hover:bg-slate-200 transition">AI 배치</a>
+                                    <button type="button" class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2.5 py-1.5 rounded-lg hover:bg-slate-200 transition" onclick="showToast('전자 계약서 PDF 다운로드...')">서류</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Host Section View -->
+            <div id="hostSection" class="view-section hidden space-y-6">
+                
+                <!-- 2-1. Host Earnings Summary -->
+                <section class="dashboard-card p-6 md:p-8">
+                    <div class="flex justify-between items-start mb-8 relative z-10">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Revenue Overview</p>
+                            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">나의 공간 수익 통계</h2>
+                        </div>
+                        <div class="w-12 h-12 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center text-[#1C44FF] text-xl">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 relative z-10">
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 mb-2">이번 달 정산액</p>
+                            <p class="text-2xl font-bold text-slate-800">₩0</p>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 mb-2">예약 대기</p>
+                            <p class="text-2xl font-bold text-slate-800">0건</p>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                            <p class="text-xs font-bold text-slate-400 mb-2">방문객 수</p>
+                            <p class="text-2xl font-bold text-slate-800">0명</p>
+                        </div>
+                    </div>
+
+                    <button type="button" class="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black transition shadow-sm" onclick="showToast('정산 계좌 등록 페이지로 이동합니다.')">
+                        수익금 정산 계좌 등록하기
+                    </button>
+                </section>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 2-2. Space Registration Status -->
+                    <section class="dashboard-card p-6 flex flex-col h-full">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-store text-slate-400"></i> 내 공간 등록 현황</h3>
+                            <a href="register.html" class="text-[10px] font-bold text-[#1C44FF] bg-[#F0F4FF] px-2.5 py-1 rounded-md">공간 추가</a>
+                        </div>
+                        <div class="bg-slate-50 rounded-3xl p-6 border border-slate-200 flex-grow flex flex-col justify-center">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm flex-shrink-0 overflow-hidden">
+                                    <img src="https://i.imgur.com/ArN1isy.jpeg" class="w-full h-full object-cover grayscale">
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-base text-slate-800 truncate mb-1">성수 브루잉 팝업홀</h4>
+                                    <span class="bg-amber-100 text-amber-700 text-[9px] font-bold px-2 py-0.5 rounded shadow-sm inline-block uppercase">운영팀 심사 중</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500 leading-relaxed mb-6 break-keep">제출하신 전대차 동의서와 시설 정보를 검토 중입니다. 영업일 기준 1~2일 내 승인이 완료됩니다.</p>
+                            <button type="button" class="w-full py-3 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition shadow-sm" onclick="showToast('등록 신청 상세 내역을 불러옵니다.')">내역 상세 보기</button>
+                        </div>
+                    </section>
+
+                    <!-- 2-3. Rental Requests -->
+                    <section class="dashboard-card p-6 flex flex-col h-full">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2"><i class="fa-solid fa-bell-concierge text-slate-400"></i> 신규 대관 문의</h3>
+                            <span class="text-[10px] font-bold bg-slate-100 text-slate-400 w-5 h-5 flex items-center justify-center rounded-full">0</span>
+                        </div>
+                        <div class="flex-grow flex flex-col items-center justify-center py-10 text-center opacity-30">
+                            <i class="fa-solid fa-calendar-xmark text-4xl mb-4"></i>
+                            <p class="text-sm font-bold">대기 중인 예약 요청이 없습니다.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Common Widgets (Bottom) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pt-12 pb-20">
+                <a href="rental-explore.html" class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm transition flex items-center justify-between group hover:border-[#1C44FF]">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 bg-blue-50 text-[#1C44FF] rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-cart-shopping text-sm"></i></div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-800 truncate">물류 장바구니</p>
+                            <p class="text-[10px] text-slate-400">2건의 아이템</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-[#1C44FF] transition"></i>
+                </a>
+                <button type="button" class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm transition flex items-center justify-between group hover:border-red-400 text-left" onclick="showToast('관심 공간 목록 페이지로 이동합니다.')">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-heart text-sm"></i></div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-800 truncate">최근 찜한 공간</p>
+                            <p class="text-[10px] text-slate-400">3개의 공간</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-red-500 transition"></i>
+                </button>
+                <a href="about-us.html#support" class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm transition flex items-center justify-between group hover:border-[#1C44FF]">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-headset text-sm"></i></div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-slate-800 truncate">고객 지원 센터</p>
+                            <p class="text-[10px] text-slate-400">도움이 필요하신가요?</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-[#1C44FF] transition"></i>
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-16 bg-white border-t border-slate-200 relative z-10 text-center md:text-left">
+        <div class="max-w-[1100px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center opacity-80">
+            <div class="mb-6 md:mb-0">
+                <span class="font-bold text-xl tracking-tighter text-[#1C44FF]">Gallerink</span>
+            </div>
+            <div class="flex space-x-6 text-[11px] font-semibold tracking-widest uppercase text-slate-400">
+                <a href="index.html" class="hover:text-[#1C44FF] transition">메인페이지</a>
+                <button type="button" class="hover:text-[#1C44FF] transition" onclick="showToast('개인정보보호정책 팝업이 열립니다.')">개인정보보호정책</button>
+                <button type="button" class="hover:text-[#1C44FF] transition" onclick="showToast('이용약관 팝업이 열립니다.')">이용약관</button>
+            </div>
+            <div class="opacity-30 text-[9px] tracking-[0.3em] uppercase font-semibold text-[#1C44FF] mt-6 md:mt-0">
+                © 2026 GALLERINK.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Global Floating Button -->
+    <button type="button" id="scrollTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-8 right-8 z-[130] w-12 h-12 bg-[#1C44FF] text-white rounded-full shadow-xl flex items-center justify-center hover:bg-blue-700 transition-all duration-300 opacity-0 invisible transform translate-y-4">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[200] flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4"></div>
+
+    <script>
+        let toastTimeout;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuClose = document.getElementById('menu-close');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileOverlay = document.getElementById('mobile-menu-overlay');
+
+            function toggleMenu(show) {
+                if(show) {
+                    mobileOverlay.classList.remove('hidden');
+                    setTimeout(() => mobileOverlay.classList.add('opacity-100'), 10);
+                    mobileMenu.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    mobileOverlay.classList.remove('opacity-100');
+                    setTimeout(() => mobileOverlay.classList.add('hidden'), 300);
+                    mobileMenu.classList.remove('open');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            menuToggle?.addEventListener('click', () => toggleMenu(true));
+            menuClose?.addEventListener('click', () => toggleMenu(false));
+            mobileOverlay?.addEventListener('click', () => toggleMenu(false));
+        });
+
+        // Mode Switch Logic
+        function switchMode(mode) {
+            const artistBtn = document.getElementById('artistModeBtn');
+            const hostBtn = document.getElementById('hostModeBtn');
+            const artistSec = document.getElementById('artistSection');
+            const hostSec = document.getElementById('hostSection');
+
+            if(mode === 'artist') {
+                artistBtn.classList.add('active');
+                artistBtn.classList.remove('text-slate-500');
+                hostBtn.classList.remove('active');
+                hostBtn.classList.add('text-slate-500');
+                artistSec.classList.remove('hidden');
+                hostSec.classList.add('hidden');
+                showToast('창작자 활동 대시보드로 전환되었습니다.');
+            } else {
+                hostBtn.classList.add('active');
+                hostBtn.classList.remove('text-slate-500');
+                artistBtn.classList.remove('active');
+                artistBtn.classList.add('text-slate-500');
+                hostSec.classList.remove('hidden');
+                artistSec.classList.add('hidden');
+                showToast('호스트 활동 대시보드로 전환되었습니다.');
+            }
+        }
+
+        // Global Toast Notification
+        function showToast(message) {
+            const toastContainer = document.getElementById('toastContainer');
+            toastContainer.innerHTML = ''; 
+            
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-800 text-white shadow-xl rounded-xl px-5 py-3.5 flex items-center justify-center gap-3 transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto text-center text-sm font-medium mx-auto w-fit';
+            toast.innerHTML = `<i class="fa-solid fa-check text-green-400"></i><span class="whitespace-nowrap">${message}</span>`;
+            
+            toastContainer.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            });
+
+            if(toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // Scroll Top Button Logic
+        window.addEventListener('scroll', () => {
+            const scrollTopBtn = document.getElementById('scrollTopBtn');
+            if (window.scrollY > 300) {
+                scrollTopBtn.classList.remove('opacity-0', 'invisible', 'translate-y-4');
+                scrollTopBtn.classList.add('opacity-100', 'visible', 'translate-y-0');
+            } else {
+                scrollTopBtn.classList.add('opacity-0', 'invisible', 'translate-y-4');
+                scrollTopBtn.classList.remove('opacity-100', 'visible', 'translate-y-0');
+            }
+        });
+    </script>
+</body>
+</html>
